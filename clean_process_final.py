@@ -42,16 +42,16 @@ df['delivery_date'] = df['delivery_date'].str.replace("NaN", '', regex=False)
 def convert_date(date_str):
     if isinstance(date_str, str):
         try:
-            # Loại bỏ khoảng trắng thừa
+            # remove the blanks
             date_str = date_str.strip()
-            # Chuyển đổi định dạng
+            # change the format
             return datetime.strptime(date_str, '%a, %b %d').replace(year=datetime.now().year).strftime('%Y%m%d')
         except ValueError as e:
             print(f"Error converting date: {e} - for date_str: {date_str}")
             return None
     return date_str
 
-# Áp dụng hàm chuyển đổi cho cột delivery_date
+# reformat the delivery_date
 df['delivery_date'] = df['delivery_date'].apply(convert_date)
 
 df['delivery_date'] = df['delivery_date'].fillna(0).astype(int)
@@ -65,7 +65,7 @@ def calculate_wait_days(delivery_int):
     wait_days = (delivery_date - now).days
     return wait_days
 
-# Áp dụng hàm tính toán cho cột delivery_date để tạo cột wait_days
+# apply functions to calculate wait days
 df['wait_days'] = df['delivery_date'].apply(calculate_wait_days)
 df['wait_days']
 
@@ -138,7 +138,7 @@ df['storage_type'] = df['name'].apply(extract_type)
 
 print(df[['name', 'storage_capacity', 'storage_type', 'ram']])
 
-# Apply the function to the 'name' column to create a new 'cpu' column
+# Apply the function to define the type because on the website when we search for laptop, amazon all shows us assesory for laptop
 def categorize_product(row):
     if row['price'] < 240 and row['ram'] == 'RAM not found' and pd.isna(row['storage_capacity']):
         return 'accessory'
