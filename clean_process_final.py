@@ -16,7 +16,6 @@ rename_dict = {
     'luot_danh_gia': 'reviews',
     'so_option_khac': 'other_opts'
 }
-# Rename columns
 df = df.rename(columns=rename_dict)
 
 df = df[df['lmsales'].str.contains('bought in past month', na=False)]
@@ -31,7 +30,6 @@ def convert_lmsales(text):
             return int(value)
     return 0
 
-# Apply the function to the lmsales column
 df['lmsales_converted'] = df['lmsales'].apply(convert_lmsales)
 df['lmsales_converted']
 df['delivery_date'] = df['delivery_date'].str.replace("Delivery", '', regex=False)
@@ -42,16 +40,13 @@ df['delivery_date'] = df['delivery_date'].str.replace("NaN", '', regex=False)
 def convert_date(date_str):
     if isinstance(date_str, str):
         try:
-            # remove the blanks
             date_str = date_str.strip()
-            # change the format
             return datetime.strptime(date_str, '%a, %b %d').replace(year=datetime.now().year).strftime('%Y%m%d')
         except ValueError as e:
             print(f"Error converting date: {e} - for date_str: {date_str}")
             return None
     return date_str
 
-# reformat the delivery_date
 df['delivery_date'] = df['delivery_date'].apply(convert_date)
 
 df['delivery_date'] = df['delivery_date'].fillna(0).astype(int)
@@ -65,7 +60,6 @@ def calculate_wait_days(delivery_int):
     wait_days = (delivery_date - now).days
     return wait_days
 
-# apply functions to calculate wait days
 df['wait_days'] = df['delivery_date'].apply(calculate_wait_days)
 df['wait_days']
 
@@ -74,7 +68,6 @@ df['reviews']
 df['price'] = df['price'].str.replace(",", '', regex=False).astype(float)
 df['price']
 
-#brand dictionary
 brand_dict = {
     'Lenovo': 'Lenovo',
     'HP': 'HP',
@@ -90,13 +83,12 @@ brand_dict = {
     'SAMSUNG': 'SAMSUNG',
     'Core Innovations': 'Core Innovations',
     'Razer Blade': 'Razer Blade',
-    'Kensington': 'Kensington',  # Add missing brand
-    'Amazon': 'Amazon',  # Add missing brand
+    'Kensington': 'Kensington', 
+    'Amazon': 'Amazon', 
     'Kingston' : 'Kingston',
     'UBeesize' : 'UBeesize'
 }
 
-# Function to find the brand in the name
 def find_brand(name):
     for key in brand_dict:
         if key in name:
@@ -107,17 +99,15 @@ df['brand'] = df['name'].apply(find_brand)
 brand_counts = df['brand'].value_counts()
 brand_counts
 
-# Regular expressions to match RAM, storage capacity, and storage type separately
 ram_pattern = re.compile(r'(\d+\s*GB\s*(?:DDR[2345]|LPDDR[34])?\s*(?:RAM|Memory)?)', re.IGNORECASE)
 capacity_pattern = re.compile(r'\b(\d+\s?(?:GB|TB)(?!\s*(?:RAM|Memory|DDR|LPDDR)))\b', re.IGNORECASE)
 type_pattern = re.compile(r'\b(SSD|HDD|eMMC)\b', re.IGNORECASE)
 
-# Function to extract RAM
 def extract_ram(name):
     match = ram_pattern.search(name)
     if match:
         ram_value = int(re.search(r'\d+', match.group(1)).group())
-        if ram_value > 100:  # Define RAM values greater than 100GB as storage
+        if ram_value > 100: 
             return 'RAM not defined'
         return match.group(1)
     return 'RAM not found'
@@ -131,31 +121,26 @@ def extract_type(name):
     match = type_pattern.search(name)
     return match.group() if match else None
 
-# Apply functions to extract RAM, storage capacity, and type and create new columns
 df['ram'] = df['name'].apply(extract_ram)
 df['storage_capacity'] = df['name'].apply(extract_capacity)
 df['storage_type'] = df['name'].apply(extract_type)
 
 print(df[['name', 'storage_capacity', 'storage_type', 'ram']])
 
-# Apply the function to define the type because on the website when we search for laptop, amazon all shows us assesory for laptop
 def categorize_product(row):
     if row['price'] < 240 and row['ram'] == 'RAM not found' and pd.isna(row['storage_capacity']):
         return 'accessory'
     else:
         return 'laptop'
 
-# Apply the function to create the new column
 df['type'] = df.apply(categorize_product, axis=1)
 df['type']
 
 type_counts = df['type'].value_counts()
 type_counts
 
-# Regular expression pattern to match CPU information
 cpu_pattern = re.compile(r'\b(?:Intel|AMD|MediaTek)\b.*?(?:Processor)?')
 
-# Function to extract CPU information
 def extract_cpu(name):
     match = cpu_pattern.search(name)
     return match.group(0) if match else 'CPU not found'
@@ -166,9 +151,7 @@ df['ram'] = df['ram'].str.replace("RAM", '', regex=False)
 df['ram'] = df['ram'].str.replace("GB", '', regex=False)
 df['ram'] = df['ram'].str.replace("DDR5", '', regex=False)
 df['ram'] = df['ram'].str.replace("Memory", '', regex=False)
-# Replace spaces and convert to numeric, coercing errors to NaN
 df['ram'] = pd.to_numeric(df['ram'].str.replace(" ", '', regex=False), errors='coerce')
-# Handle NaN values if needed (e.g., fill with 0, drop them, etc.)
 df['ram'].fillna(0, inplace=True)
 df['ram']
 
@@ -182,7 +165,6 @@ def convert_tb_to_gb(capacity):
     else:
         return capacity
 
-# Apply the function to the 'storage_capacity' column
 df['storage_capacity'] = df['storage_capacity'].apply(convert_tb_to_gb)
 df['storage_capacity']
 
