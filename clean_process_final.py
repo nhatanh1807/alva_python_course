@@ -112,7 +112,6 @@ def extract_ram(name):
         return match.group(1)
     return 'RAM not found'
 
-# Functions to extract storage capacity and type
 def extract_capacity(name):
     match = capacity_pattern.findall(name)
     return match[-1] if match else None
